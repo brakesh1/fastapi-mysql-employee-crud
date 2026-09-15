@@ -1,23 +1,71 @@
-version: '3.8'
-
 services:
+
   mysql:
     image: mysql:8.0
     container_name: employee_mysql
-    restart: always
+    restart: unless-stopped
+
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: employee_db
       MYSQL_USER: appuser
       MYSQL_PASSWORD: apppass
-    ports:
-      - "3306:3306"
+
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./backend/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
       timeout: 20s
       retries: 10
+      interval: 5s
+
+    networks:
+      - employee_network
+
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: employee_backend
+    restart: unless-stopped
+
+    environment:
+      DATABASE_URL: mysql+pymysql://appuser:apppass@mysql:3306/employee_db
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    expose:
+      - "8000"
+
+    networks:
+      - employee_network
+
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: employee_frontend
+    restart: unless-stopped
+
+    depends_on:
+      - backend
+
+    ports:
+      - "80:80"
+
+    networks:
+      - employee_network
+
 
 volumes:
   mysql_data:
+
+
+networks:
+  employee_network:
