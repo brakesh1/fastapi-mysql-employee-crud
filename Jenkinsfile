@@ -59,7 +59,7 @@ pipeline {
     post {
 
         success {
-            echo 'Hurray Deployment successful!'
+            echo 'Wow Your Deployment successful!'
         }
 
         failure {
