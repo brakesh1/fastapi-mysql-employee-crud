@@ -19,7 +19,7 @@ pipeline {
                     echo "Checking Docker Compose..."
                     docker compose version
 
-                    echo "Checking project..."
+                    echo "Checking project output..."
                     ls -la
                 '''
             }
